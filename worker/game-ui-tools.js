@@ -70,8 +70,10 @@ async function writeRecord(store, key, etag, record) {
   });
 }
 
-// 已知的推理类游戏代号固定用终端皮肤；其余按标题题材词判断，判断不出用 A。
-const ENGINE_CHAPTER = { 'blue-rose-manor': 'C', 'midnight-express': 'C', 'faded-station': 'C', 'loop-station': 'C', 'archive-terminal': 'C', 'fog-station-lost-found': 'C' };
+// 可选：部署时用环境变量 ENGINE_SKINS 指定某些外部游戏固定用哪套皮肤，例如 {"my-mystery-game":"C"}。
+function engineSkin(raw, key) {
+  try { const m = typeof raw === 'string' ? JSON.parse(raw) : raw; const v = m && m[key]; return /^[A-E]$/.test(v || '') ? v : null; } catch { return null; }
+}
 
 async function renderPipeline({ view, themeText, fieldsDecl, newGame, cardRequest, store, key, fixedChapter, skinRequest }) {
   let previous = null, etag = null;
@@ -157,8 +159,8 @@ export async function callGameUiTool(name, args, store, userId, meta) {
   return result;
 }
 
-// 游戏总管 get_game_view 的画面 → 同一套卡片。按存档分别记录上一回合，规则和存档仍由游戏总管负责。
-export async function callGameViewTool(args, store, userId, meta) {
+// 外部游戏引擎返回的画面 → 同一套卡片。按存档分别记录上一回合，规则和存档仍由那个引擎负责。
+export async function callGameViewTool(args, store, userId, meta, engineSkins) {
   if (!args || typeof args !== 'object' || Array.isArray(args)) throw new GameUiError('参数必须是对象。');
   if (Object.keys(args).some(k => !['view', 'theme', 'card', 'skin', 'game_id'].includes(k))) throw new GameUiError('包含未知参数。');
   const root = args.view && typeof args.view === 'object' ? args.view : {};
@@ -178,6 +180,6 @@ export async function callGameViewTool(args, store, userId, meta) {
   return renderPipeline({
     view, themeText: args.theme || state['标题'], fieldsDecl: null, newGame: false, cardRequest: args.card || (state['选项'] ? undefined : '状态'),
     store, key: 'b-game-ui/v2/' + userHash + '/hub-' + (await sha(saveId)) + '.json',
-    fixedChapter: args.theme ? null : (ENGINE_CHAPTER[gameKey] || null), skinRequest: args.skin
+    fixedChapter: args.theme ? null : engineSkin(engineSkins, gameKey), skinRequest: args.skin
   });
 }

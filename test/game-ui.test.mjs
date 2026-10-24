@@ -154,23 +154,23 @@ test('build bundle parses as a single Cloudflare worker', () => {
   execFileSync(process.execPath, ['--check', 'dist/worker.js'], { cwd: new URL('..', import.meta.url) });
 });
 
-test('game master view is parsed into the same cards, status line split apart', async () => {
+test('external engine view is parsed into the same cards, status line split apart', async () => {
   const { callGameViewTool } = await import('../worker/game-ui-tools.js');
   const store = new MemoryStore();
-  const hub = { view: { saveId: 'save_x', gameKey: 'midnight-express', gameName: '午夜特快', turn: 93, choices: [],
-    scene: '【年轻画家】\n你：案发当晚你做了什么？\n年轻画家：我在画速写。\n\n📍 餐车 | 🔍 线索 8 | ⏳ 时间线 2/15 | 💀 死亡 0/5 | ↩️ 回溯 7 | 🕐 剩余 65' } };
-  const r1 = await callGameViewTool({ view: hub }, store, 'u1');
+  const hub = { view: { saveId: 'save_x', gameKey: 'demo-lighthouse', gameName: '灯塔守夜人', turn: 93, choices: [],
+    scene: '【邮差】\n你：昨晚你看到灯灭了吗？\n邮差：我只看到海上有一条小船。\n\n📍 灯塔底层 | 🔍 线索 8 | ⏳ 时间线 2/15 | 💀 死亡 0/5 | ↩️ 回溯 7 | 🕐 剩余 65' } };
+  const r1 = await callGameViewTool({ view: hub }, store, 'u1', {}, '{"demo-lighthouse":"C"}');
   const sc = r1.structuredContent;
   assert.equal(sc.card.type, 'status');
   assert.equal(sc.card.skin, 'C');
-  assert.equal(sc.view['地点'].name, '餐车');
+  assert.equal(sc.view['地点'].name, '灯塔底层');
   assert.deepEqual(sc.view['数值'].map(s => [s.icon, s.label, s.value, s.max]), [['🔍', '线索', 8, null], ['⏳', '时间线', 2, 15], ['💀', '死亡', 0, 5], ['↩️', '回溯', 7, null], ['🕐', '剩余', 65, null]]);
   assert.ok(!sc.view['事件'][0].includes('📍'));
-  hub.view.turn = 94; hub.view.scene = hub.view.scene.replace('线索 8', '线索 9').replace('📍 餐车', '📍 卧铺车厢');
+  hub.view.turn = 94; hub.view.scene = hub.view.scene.replace('线索 8', '线索 9').replace('📍 灯塔底层', '📍 守夜人小屋');
   const r2 = await callGameViewTool({ view: hub }, store, 'u1');
   assert.equal(r2.structuredContent.changes.statDelta['线索'], 1);
-  assert.ok(r2.structuredContent.changes.summary.includes('来到：卧铺车厢'));
-  hub.view.choices = [{ id: 'a', label: '去问乘务员' }];
+  assert.ok(r2.structuredContent.changes.summary.includes('来到：守夜人小屋'));
+  hub.view.choices = [{ id: 'a', label: '去问邮差' }];
   const r3 = await callGameViewTool({ view: hub }, store, 'u1');
   assert.equal(r3.structuredContent.card.type, 'choice');
 });

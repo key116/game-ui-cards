@@ -158,7 +158,7 @@ function named(item) {
   return { name: clip(item, 60), desc: '', raw: null };
 }
 
-// 把“📍 餐车 | 🔍 线索 8 | ⏳ 时间线 2/15”这类状态行拆成地点和数值。至少两段、用 | 分开才算。
+// 把“📍 灯塔底层 | 🔍 线索 8 | ⏳ 时间线 2/15”这类状态行拆成地点和数值。至少两段、用 | 分开才算。
 export function parseStatusLine(text) {
   const lines = String(text ?? '').split(/\r?\n/);
   const out = { place: null, stats: [], moods: [], rest: String(text ?? '') };

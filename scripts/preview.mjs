@@ -50,12 +50,12 @@ await run('9-terminal', { state: {
   '判定': { '项目': '图书馆使用', '骰值': 12, '目标': 60, '结果': '极难成功' }, '事件': '书架深处传来翻页声',
   '选项': ['翻看借阅登记簿', '走近那扇半开的铁门', '回到楼上找图书管理员问话'] }, theme: '克苏鲁', new_game: true }, 'coc');
 
-// 游戏总管的真实画面（午夜特快第 93 回合）→ 新卡片
-const hub = { view: { saveId: 'save_demo', gameKey: 'midnight-express', gameName: '午夜特快', turn: 93, choices: [],
-  scene: '【年轻画家】\n你：案发当晚你做了什么？\n年轻画家：我在画速写，画到凌晨一点才睡，中间没有离开过包厢。你要我证明——我没有，但我确实没有离开过。\n\n📍 餐车 | 🔍 线索 8 | ⏳ 时间线 2/15 | 💀 死亡 0/5 | ↩️ 回溯 7 | 🕐 剩余 65' } };
+// 外部游戏引擎的画面示例（原创示例）→ 新卡片
+const hub = { view: { saveId: 'save_demo', gameKey: 'demo-lighthouse', gameName: '灯塔守夜人', turn: 93, choices: [],
+  scene: '【邮差】\n你：昨晚你看到灯灭了吗？\n邮差：我只看到海上有一条小船，船上没有点灯。我送完信就走了，真的。\n\n📍 灯塔底层 | 🔍 线索 8 | ⏳ 时间线 2/15 | 💀 死亡 0/5 | ↩️ 回溯 7 | 🕐 剩余 65' } };
 scenes.push(['h1-hub-status', await callGameViewTool({ view: hub }, store, 'hubuser')]);
-const hub2 = { view: { ...hub.view, turn: 94, choices: [{ id: 'a', label: '翻看画家的速写本' }, { id: 'b', label: '去卧铺车厢找乘务员' }],
-  scene: '你注意到速写本最后一页画着一扇半开的包厢门。\n\n📍 卧铺车厢 | 🔍 线索 9 | ⏳ 时间线 3/15 | 💀 死亡 0/5 | ↩️ 回溯 7 | 🕐 剩余 64' } };
+const hub2 = { view: { ...hub.view, turn: 94, choices: [{ id: 'a', label: '翻看邮差的送信记录' }, { id: 'b', label: '去守夜人小屋看看' }],
+  scene: '你注意到送信记录最后一页，缺了昨晚的签名。\n\n📍 守夜人小屋 | 🔍 线索 9 | ⏳ 时间线 3/15 | 💀 死亡 0/5 | ↩️ 回溯 7 | 🕐 剩余 64' } };
 scenes.push(['h2-hub-choice', await callGameViewTool({ view: hub2 }, store, 'hubuser')]);
 // 字段声明 + 氛围 + 换地点横幅（皮肤 A）
 await run('f1-fields', { state: { '标题': '海边杂货铺', '时间': '第3天 傍晚', '🪙 金币': 42, '📦 货架': '60%', '天气': '小雨', '紧张度': '平静', '选项': ['把雨伞摆到门口', '关店去码头'] },

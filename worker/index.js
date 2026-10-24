@@ -43,7 +43,7 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === '/health' && request.method === 'GET') {
-      return Response.json({ ok: true, isolated: true, build: 'cloudflare-0.8.0' }, { headers: { 'cache-control': 'no-store' } });
+      return Response.json({ ok: true, isolated: true, build: 'cloudflare-0.8.1' }, { headers: { 'cache-control': 'no-store' } });
     }
     const isPublic = String(env.PUBLIC_MODE || '') === '1';
     const isPrivate = /^\/probe-[a-f0-9]{64}\/mcp$/.test(env.PROBE_MCP_PATH || '') && url.pathname === env.PROBE_MCP_PATH;
@@ -57,6 +57,6 @@ export default {
     headers.set('oai-authenticated-user-id', isPrivate ? 'isolated-cloudflare-probe-owner-v1' : 'public');
     const store = new D1Store(env.PROBE_DB);
     if (isPublic && !isPrivate) { await store.ensureTable(); await store.sweep(); }
-    return core.fetch(new Request(url, { method: request.method, headers, body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body, duplex: 'half' }), { PROBE_STORE: store });
+    return core.fetch(new Request(url, { method: request.method, headers, body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body, duplex: 'half' }), { PROBE_STORE: store, ENGINE_SKINS: env.ENGINE_SKINS });
   }
 };
