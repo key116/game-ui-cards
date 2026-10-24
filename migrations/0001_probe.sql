@@ -1,0 +1,5 @@
+CREATE TABLE IF NOT EXISTS probe_objects (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  etag TEXT NOT NULL
+);

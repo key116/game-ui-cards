@@ -1,0 +1,9 @@
+node_modules/
+dist/
+upload/_worker.js
+*.zip
+.env*
+.dev.vars*
+wrangler.json
+wrangler.jsonc
+wrangler.toml

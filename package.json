@@ -1,0 +1,15 @@
+{
+  "name": "game-ui-cards",
+  "version": "0.8.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "release": "npm test && npm run build && python3 scripts/package.py",
+    "dev": "node scripts/preview.mjs",
+    "test": "node --test test/*.test.mjs"
+  },
+  "license": "PolyForm-Noncommercial-1.0.0",
+  "author": "key116",
+  "description": "让 ChatGPT / Claude 跑文字游戏时，在聊天里显示稳定好看的游戏卡片（MCP Apps）。"
+}
