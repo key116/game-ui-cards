@@ -82,7 +82,7 @@ iPhone 要关掉侧面的静音键；安卓要把媒体音量调大。另外每�
 
 不想用公开地址，或者想自己改，可以免费部署到 Cloudflare，全程在网页上操作。
 
-1. 到本仓库的 Releases（发行版）下载最新的 `game-ui-cards-v*.zip`，**不用解压**。
+1. 下载上传包 [download/game-ui-cards-v0.8.0.zip](download/game-ui-cards-v0.8.0.zip)（点进去后点右边的下载按钮），**不用解压**。
 2. 登录 [Cloudflare](https://dash.cloudflare.com)，左边菜单进 Storage & Databases（存储和数据库）→ D1，点 Create database（创建数据库），名字随便填，比如 `game-ui`。
 3. 左边菜单进 Workers & Pages → Create（创建）→ 选 Pages → Upload assets（上传文件），项目名随便填，把 zip 拖进去，点 Deploy（部署）。
 4. 进入这个项目的 Settings（设置）：
