@@ -72,3 +72,11 @@ test('public mode: /mcp works, table is created automatically, games are kept ap
   assert.equal(s1.structuredContent.changes.first, true);
   assert.equal((await worker.fetch(new Request('https://pub.test/probe-' + 'a'.repeat(64) + '/mcp', { method: 'POST', body: '{}' }), env)).status, 404);
 });
+
+test('new names GAME_DB / PRIVATE_MCP_PATH work alongside the old ones', async () => {
+  const db = database(); const priv = '/private-' + 'c'.repeat(64) + '/mcp';
+  const env = { GAME_DB: db, PRIVATE_MCP_PATH: priv };
+  const res = await (await worker.fetch(rpc(priv, 'render_game_ui', { state: { '金币': 1 } }), env)).json();
+  assert.equal(res.result.structuredContent.kind, 'game-ui');
+  assert.equal((await worker.fetch(rpc('/mcp', 'render_game_ui', { state: {} }), env)).status, 404);
+});

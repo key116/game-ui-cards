@@ -1,7 +1,7 @@
 import { GAME_UI_URI, gameUiTools, callGameUiTool, callGameViewTool, GameUiError } from './game-ui-tools.js';
 import { gameUiHtml } from './game-ui-widget.js';
 
-const VERSION = '0.8.1';
+const VERSION = '0.8.2';
 const UI_MIME = 'text/html;profile=mcp-app';
 const protocols = ['2025-11-25', '2025-06-18', '2025-03-26', '2024-11-05'];
 
@@ -21,18 +21,18 @@ tools.push({
   _meta: { ui: { resourceUri: GAME_UI_URI, visibility: ['app', 'model'] }, 'openai/outputTemplate': GAME_UI_URI, 'openai/widgetAccessible': true }
 });
 
-class ProbeError extends Error { constructor(message, code = -32602) { super(message); this.code = code; } }
+class GameError extends Error { constructor(message, code = -32602) { super(message); this.code = code; } }
 
-export async function callProbeTool(name, args, store, userId, meta, engineSkins) {
+export async function callTool(name, args, store, userId, meta, engineSkins) {
   if (name === 'show_game_view') {
     try { return await callGameViewTool(args, store, userId, meta, engineSkins); }
-    catch (e) { throw new ProbeError(e instanceof GameUiError ? e.message : '游戏画面暂时无法显示，请直接用文字继续。'); }
+    catch (e) { throw new GameError(e instanceof GameUiError ? e.message : '游戏画面暂时无法显示，请直接用文字继续。'); }
   }
   if (gameUiTools.some(t => t.name === name)) {
     try { return await callGameUiTool(name, args, store, userId, meta); }
-    catch (e) { throw new ProbeError(e instanceof GameUiError ? e.message : '游戏界面暂时无法生成，请直接用文字继续。'); }
+    catch (e) { throw new GameError(e instanceof GameUiError ? e.message : '游戏界面暂时无法生成，请直接用文字继续。'); }
   }
-  throw new ProbeError('未知工具。');
+  throw new GameError('未知工具。');
 }
 
 const INSTRUCTIONS =
@@ -63,21 +63,21 @@ async function processRpc(message, env, userId) {
       case 'resources/templates/list': return reply({ resourceTemplates: [] });
       case 'resources/read': {
         if (message.params?.uri === GAME_UI_URI) return reply({ contents: [{ uri: GAME_UI_URI, mimeType: UI_MIME, text: gameUiHtml, _meta: resourceMeta('游戏界面卡片：按游戏状态自动显示数值、地点、背包、判定、线索、人物、任务和选项按钮；点选项会把整句行动作为玩家消息发出。') }] });
-        throw new ProbeError('Resource not found', -32002);
+        throw new GameError('Resource not found', -32002);
       }
       case 'tools/call': {
-        if (!userId) throw new ProbeError('需要登录后才能使用。', -32001);
-        try { return reply(await callProbeTool(message.params?.name, message.params?.arguments ?? {}, env.PROBE_STORE, userId, message.params?._meta || {}, env.ENGINE_SKINS)); }
-        catch (e) { console.error('tool_error', JSON.stringify({ tool: message.params?.name, code: e.code ?? -32603 })); return reply({ isError: true, content: [{ type: 'text', text: e instanceof ProbeError ? e.message : '服务暂时不可用，请稍后再试。' }] }); }
+        if (!userId) throw new GameError('需要登录后才能使用。', -32001);
+        try { return reply(await callTool(message.params?.name, message.params?.arguments ?? {}, env.STORE, userId, message.params?._meta || {}, env.ENGINE_SKINS)); }
+        catch (e) { console.error('tool_error', JSON.stringify({ tool: message.params?.name, code: e.code ?? -32603 })); return reply({ isError: true, content: [{ type: 'text', text: e instanceof GameError ? e.message : '服务暂时不可用，请稍后再试。' }] }); }
       }
-      default: throw new ProbeError('Method not found', -32601);
+      default: throw new GameError('Method not found', -32601);
     }
-  } catch (e) { return { jsonrpc: '2.0', id: message.id, error: { code: e.code ?? -32603, message: e instanceof ProbeError ? e.message : 'Internal error' } }; }
+  } catch (e) { return { jsonrpc: '2.0', id: message.id, error: { code: e.code ?? -32603, message: e instanceof GameError ? e.message : 'Internal error' } }; }
 }
 
 export default { async fetch(request, env) {
   const url = new URL(request.url);
-  if (url.pathname === '/health') return json({ ok: true, version: VERSION, isolated: true, storageConfigured: !!env.PROBE_STORE });
+  if (url.pathname === '/health') return json({ ok: true, version: VERSION, isolated: true, storageConfigured: !!env.STORE });
   if (url.pathname !== '/mcp') return new Response('Not Found', { status: 404 });
   if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405, headers: { Allow: 'POST' } });
   const userId = request.headers.get('oai-authenticated-user-id');

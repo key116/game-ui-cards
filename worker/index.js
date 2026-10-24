@@ -1,8 +1,10 @@
 import core from './core.js';
 
 // 两种部署方式：
-// 1) 私人：设置 PROBE_MCP_PATH（/probe-<64位十六进制>/mcp），只有知道这个地址的人能用，所有记录归同一个主人。
+// 1) 私人：设置 PRIVATE_MCP_PATH（/private-<64位十六进制>/mcp），只有知道这个地址的人能用，所有记录归同一个主人。
+//    （旧名 PROBE_MCP_PATH、/probe-… 路径和数据库绑定名 PROBE_DB 继续兼容，已有部署不用改。）
 // 2) 公开：设置 PUBLIC_MODE=1，地址是 /mcp，谁都能连；每个玩家、每一局按 game_id 分开记录，旧记录 30 天后自动清理。
+// 表名 probe_objects 是早期版本留下的，为了不让已有部署丢记录，保持不变。
 const TABLE_SQL = 'CREATE TABLE IF NOT EXISTS probe_objects (key TEXT PRIMARY KEY, value TEXT NOT NULL, etag TEXT NOT NULL)';
 let tableReady = false;
 
@@ -43,20 +45,23 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === '/health' && request.method === 'GET') {
-      return Response.json({ ok: true, isolated: true, build: 'cloudflare-0.8.1' }, { headers: { 'cache-control': 'no-store' } });
+      return Response.json({ ok: true, isolated: true, build: 'cloudflare-0.8.2' }, { headers: { 'cache-control': 'no-store' } });
     }
     const isPublic = String(env.PUBLIC_MODE || '') === '1';
-    const isPrivate = /^\/probe-[a-f0-9]{64}\/mcp$/.test(env.PROBE_MCP_PATH || '') && url.pathname === env.PROBE_MCP_PATH;
+    const privatePath = env.PRIVATE_MCP_PATH || env.PROBE_MCP_PATH || '';
+    const isPrivate = /^\/(private|probe)-[a-f0-9]{64}\/mcp$/.test(privatePath) && url.pathname === privatePath;
     if (url.search || !(isPrivate || (isPublic && url.pathname === '/mcp'))) return notFound();
-    if (!env.PROBE_DB) return new Response('Storage unavailable', { status: 503 });
+    const db = env.GAME_DB || env.PROBE_DB;
+    if (!db) return new Response('Storage unavailable', { status: 503 });
     url.pathname = '/mcp';
     const headers = new Headers(request.headers);
     // Cloudflare 不提供可信的登录身份，客户端发来的身份一律不信。
     headers.delete('oai-authenticated-user-email');
     headers.delete('oai-authenticated-user-full-name');
+    // 私人部署的主人编号沿用旧值，改了会让已有的对比记录失效。
     headers.set('oai-authenticated-user-id', isPrivate ? 'isolated-cloudflare-probe-owner-v1' : 'public');
-    const store = new D1Store(env.PROBE_DB);
+    const store = new D1Store(db);
     if (isPublic && !isPrivate) { await store.ensureTable(); await store.sweep(); }
-    return core.fetch(new Request(url, { method: request.method, headers, body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body, duplex: 'half' }), { PROBE_STORE: store, ENGINE_SKINS: env.ENGINE_SKINS });
+    return core.fetch(new Request(url, { method: request.method, headers, body: ['GET', 'HEAD'].includes(request.method) ? undefined : request.body, duplex: 'half' }), { STORE: store, ENGINE_SKINS: env.ENGINE_SKINS });
   }
 };

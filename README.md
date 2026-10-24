@@ -78,22 +78,25 @@ iPhone 要关掉侧面的静音键；安卓要把媒体音量调大。另外每�
 跟它说一句「记得每回合都用游戏卡片显示」。
 
 **会保存我的游戏吗？**
-不会保存剧情。服务器只记一份上一回合的状态，用来标出「本回合变化」，30 天不用自动删除。游戏进度靠的是聊天记录本身。
+不会保存剧情。服务器只记一份上一回合的状态（数值、背包、选项这些），用来标出「本回合变化」，30 天不用自动删除。游戏进度靠的是聊天记录本身。
+
+**隐私提醒**
+公开地址是大家共用的，服务器靠每局的随机编号和平台给的匿名用户号区分不同玩家，但这种区分方式不是严格的账号登录，理论上可以被伪造。所以请不要把真实姓名、联系方式、密码之类的敏感信息写进游戏状态里。介意的话，可以按下面的步骤自己部署一份私人版。
 
 ## 自己部署一份（可选）
 
 不想用公开地址，或者想自己改，可以免费部署到 Cloudflare，全程在网页上操作。
 
-1. 下载上传包 [download/game-ui-cards-v0.8.1.zip](download/game-ui-cards-v0.8.1.zip)（点进去后点右边的下载按钮），**不用解压**。
+1. 下载上传包 [download/game-ui-cards-v0.8.2.zip](download/game-ui-cards-v0.8.2.zip)（点进去后点右边的下载按钮），**不用解压**。
 2. 登录 [Cloudflare](https://dash.cloudflare.com)，左边菜单进 Storage & Databases（存储和数据库）→ D1，点 Create database（创建数据库），名字随便填，比如 `game-ui`。
 3. 左边菜单进 Workers & Pages → Create（创建）→ 选 Pages → Upload assets（上传文件），项目名随便填，把 zip 拖进去，点 Deploy（部署）。
 4. 进入这个项目的 Settings（设置）：
-   - Bindings（绑定）→ Add（添加）→ D1 database：Variable name（变量名）填 `PROBE_DB`，选第 2 步建的数据库，保存。
+   - Bindings（绑定）→ Add（添加）→ D1 database：Variable name（变量名）填 `GAME_DB`（旧名 `PROBE_DB` 也能用），选第 2 步建的数据库，保存。
    - Variables and Secrets（变量和密钥）→ Add（添加）：名字填 `PUBLIC_MODE`，值填 `1`，保存。
 5. 回到 Deployments（部署）页，点 Create deployment（新建部署），把同一个 zip 再上传一次，让上面的设置生效。
 6. 你的连接器地址就是 `https://你的项目名.pages.dev/mcp`。浏览器打开 `https://你的项目名.pages.dev/health`，能看到 `"ok":true` 就说明成功了。
 
-只想自己用、不想让别人连的话，第 4 步不填 `PUBLIC_MODE`，改填 `PROBE_MCP_PATH`，值为 `/probe-` 加 64 位随机十六进制字符再加 `/mcp`，把这个当作私人地址。
+只想自己用、不想让别人连的话，第 4 步不填 `PUBLIC_MODE`，改填 `PRIVATE_MCP_PATH`，值为 `/private-` 加 64 位随机十六进制字符（0-9、a-f）再加 `/mcp`，这一串就是你的私人地址，别告诉别人。
 
 ## 给 AI 和开发者看的
 
